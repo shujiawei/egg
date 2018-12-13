@@ -1,13 +1,19 @@
 'use strict';
 const moment = require('moment');
+const uuidv1 = require("uuid/v1");
 
+function generateUUID() {
+  return uuidv1().replace(/-/g, "");
+}
 module.exports = app => {
-    const { STRING, INTEGER, BIGINT, DATE, TIME } = app.Sequelize;
+    const { STRING, INTEGER, BIGINT, DATE, TIME, UUID  } = app.Sequelize;
     const ChartReport = app.model.define('chart_report', {
         report_id: {
-            type: BIGINT(20),
+            type: UUID,
             primaryKey: true,
-            allowNull: false,
+            defaultValue: () => {
+                return `app_${generateUUID()}`;
+            }
         },
         is_insight: {
             type: BIGINT(2),
