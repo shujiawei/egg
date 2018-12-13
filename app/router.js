@@ -14,4 +14,6 @@ module.exports = app => {
 	// 报表列表
 	router.post('chart_report', '/dmc/api/report/all', controller.dmc.report.reportGetAll);
 	router.get('/user', controller.user.index);
+	// 测试上传
+	router.post('test_upload', '/upload', controller.dmc.upload.upload);
 };
