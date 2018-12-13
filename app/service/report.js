@@ -29,6 +29,8 @@ class ReportService extends Service{
         const ctx = this.ctx;
         // format params
         let data = null;
+        ctx.request.body.data['created'] = new Date();
+        ctx.request.body.data['updated'] = new Date();
         await ctx.model.ChartReport.create(ctx.request.body.data).then(res => {
             data =  { data: res.dataValues, info: 'success',  code: 0 };
         });
@@ -39,6 +41,7 @@ class ReportService extends Service{
         let data = null;
         const isExitReport = await ctx.model.ChartReport.findById(ctx.params.reportId);
         if (isExitReport) {
+            ctx.request.body.data['updated'] = new Date();
             await isExitReport.update(ctx.request.body.data).then(res => {
                 data =  { data: res.dataValues, info: '修改成功',  code: 0 };
             });
@@ -61,7 +64,35 @@ class ReportService extends Service{
     async getAll() { //get List
         const ctx = this.ctx;
         const data =  { data: null, info: '修改成功',  code: 0 };
-        data['data'] = await ctx.model.ChartReport.findAll({where: {status: 1}});
+        const Op = this.app.Sequelize.Op;
+        //format params
+        const formatParams = {
+            startDate: ctx.request.body.startDate ? ctx.request.body.startDate : '',
+            endDate: ctx.request.body.endDate ? ctx.request.body.endDate : '',
+            search: ctx.request.body.search ? ctx.request.body.search : '',
+            limit: ctx.request.body.limit ? ctx.request.body.limit : 10,
+            offset: ctx.request.body.offset ? ctx.request.body.limit * (ctx.request.body.offset - 1) : 0,
+        }
+        data['data'] = await ctx.model.ChartReport.findAll(
+            {
+                where: {
+                    [Op.and]: [
+                        {
+                            report_cn: {
+                                [Op.like]: `%${formatParams.search}%`
+                            }
+                        },
+                        {
+                            created: {
+                                [Op.between]: [formatParams.startDate, formatParams.endDate],
+                            }
+                        }
+                    ]
+                },
+                limit: formatParams.limit,
+                offset: formatParams.offset
+            },
+        );
         if (!data['data']) {
             data['info'] = '获取失败';
             data['code'] = '-1';
